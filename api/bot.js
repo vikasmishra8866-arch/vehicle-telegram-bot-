@@ -9,14 +9,14 @@ export default async function handler(req, res) {
   // टेलीग्राम को तुरंत 200 OK भेजें
   res.status(200).json({ ok: true });
 
-  // बॉडी को पढ़ें (Vercel के ऑटो-पार्स पर निर्भर न रहें)
+  // बॉडी को पढ़ें
   let body = '';
   req.on('data', chunk => { body += chunk.toString(); });
   
   req.on('end', () => {
     try {
       const update = JSON.parse(body);
-      console.log("Received update:", JSON.stringify(update)); // डीबगिंग के लिए
+      console.log("Received update:", JSON.stringify(update));
       
       // बैकग्राउंड में प्रोसेस करें
       waitUntil(processUpdate(update));
@@ -28,17 +28,15 @@ export default async function handler(req, res) {
 
 async function processUpdate(update) {
   try {
-    console.log("Processing update..."); // डीबगिंग के लिए
+    console.log("Processing update...");
     const message = update.message;
     if (!message || !message.text) return;
 
     const chatId = message.chat.id;
     const raw = message.text.trim();
-    console.log(`Message from ${chatId}: ${raw}`); // डीबगिंग के लिए
+    console.log(`Message from ${chatId}: ${raw}`);
 
-    // ... बाकी कोड (पहले जैसा ही रहेगा) ...
-    // /start कमांड, व्हीकल नंबर चेक करना, API कॉल करना, आदि।
-    
+    // ... (यहाँ से आगे का कोड पहले जैसा ही रहेगा: /start कमांड, व्हीकल नंबर चेक करना, API कॉल करना, आदि।) ...
     // उदाहरण के लिए:
     if (raw === "/start") {
        await sendMessage(chatId, "🚗 <b>Vehicle Lookup Bot</b>\n\nKisi bhi vehicle ka registration number bhejein.\nExample: <code>GJ05HG7801</code>");
@@ -72,9 +70,8 @@ async function processUpdate(update) {
     await editMessage(chatId, loadingMsgId, text);
 
   } catch (err) {
-    console.error("Error in processUpdate:", err); // एरर लॉग करें
+    console.error("Error in processUpdate:", err);
   }
 }
 
 // sendMessage, editMessage, formatVehicle फंक्शन्स पहले जैसे ही रहेंगे
-// ... (उन्हें यहाँ कॉपी करें) ...
