@@ -15,19 +15,20 @@ dp.include_router(router)
 async def webhook(request: Request):
     try:
         update_data = await request.json()
-        print("📥 Received update from Telegram") # लॉग्स में दिखेगा
+        print("📥 Received update from Telegram")
         
-        # सीधे प्रोसेस करें ताकि Vercel सर्वर को बंद न करे
-        update = types.Update.model_validate(update_data, context={"bot": bot})
+        # Vercel पर फ्रीज होने से रोकने के लिए सीधे await का इस्तेमाल
+        update = types.Update.model_validate(update_data, context={"bot": bot, "dispatcher": dp})
         await dp.feed_update(bot, update)
         
         return {"ok": True}
     except Exception as e:
-        print(f"❌ Webhook Error: {e}")
+        print(f"❌ Webhook Error: {type(e).__name__}: {e}")
         return {"ok": False, "error": str(e)}
 
 @app.get("/")
 def health_check():
     return {"status": "Bot is running!"}
 
+# Vercel के लिए सबसे जरुरी हैंडलर
 handler = Mangum(app)
