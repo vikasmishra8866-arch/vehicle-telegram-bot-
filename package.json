@@ -1,9 +1,0 @@
-{
-  "name": "vehicle-telegram-bot",
-  "version": "1.0.0",
-  "type": "module",
-  "dependencies": {
-    "grammy": "^1.30.0",
-    "@vercel/functions": "^1.5.0"
-  }
-}
