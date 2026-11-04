@@ -2,7 +2,7 @@
   "functions": {
     "api/index.py": {
       "maxDuration": 60,
-      "runtime": "@vercel/python"
+      "runtime": "@vercel/python@4.3.0"
     }
   },
   "rewrites": [
