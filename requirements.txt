@@ -1,7 +1,7 @@
 fastapi==0.110.0
 uvicorn==0.29.0
 aiogram==3.4.1
-supabase==2.3.4
+supabase>=2.10.0
 python-dotenv==1.0.1
 aiohttp==3.9.3
 mangum==0.17.0
