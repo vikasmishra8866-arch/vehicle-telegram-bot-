@@ -14,7 +14,7 @@ async def start_cmd(message: types.Message):
     user = get_or_create_user(message.from_user.id, message.from_user.username, message.from_user.first_name)
     bal = user.get("wallet_balance", 0) if user else 0
     text = f"🚗 <b>Vehicle Lookup Bot</b>\n\n👋 Welcome {message.from_user.first_name}!\n💳 Wallet Balance: <b>{bal} Credits</b>\n\nVehicle number bhejein.\nExample: <code>GJ05HG7801</code>"
-    await message.answer(text, parse_mode="HTML", reply_markup=main_toolbar(message.from_user.id))
+    await message.answer(text, parse_mode="HTML", reply_markup=main_toolbar())
 
 @router.message(lambda msg: msg.text == "💳 My Wallet")
 async def btn_wallet(message: types.Message):
@@ -31,6 +31,11 @@ async def btn_add_credits(message: types.Message):
 async def btn_help(message: types.Message):
     await message.answer("📖 <b>HELP</b>\n\nSirf registration number bhejein. Support ke liye admin se contact karein: @Rizx_x", parse_mode="HTML")
 
+@router.message(lambda msg: msg.text == "🔍 Search Vehicle")
+async def btn_search_info(message: types.Message):
+    await message.answer("🔍 <b>SEARCH VEHICLE</b>\n\nKisi bhi vehicle ka registration number bhejein.\nExample: <code>GJ05HG7801</code>", parse_mode="HTML")
+
+# यह वाला हैंडलर सबसे नीचे रहेगा ताकि यह ऊपर के बटनों को न पकड़े
 @router.message(lambda msg: re.match(r"^[A-Za-z0-9\s-]{6,15}$", msg.text or ""))
 async def search_vehicle(message: types.Message):
     user_id = message.from_user.id
