@@ -47,7 +47,6 @@ def get_active_subscription(user_id: int):
         res = supabase.table("subscriptions").select("*").eq("user_id", user_id).eq("status", "active").gte("expiry_date", datetime.now(timezone.utc).isoformat()).execute()
         return res.data[0] if res.data else None
     except Exception as e:
-        print(f"❌ DB Error get_sub: {e}")
         return None
 
 def deduct_credit(telegram_id: int):
@@ -65,7 +64,6 @@ def deduct_credit(telegram_id: int):
             return True
         return False
     except Exception as e:
-        print(f"❌ DB Error deduct_credit: {e}")
         return False
 
 def log_search(telegram_id: int, vehicle_number: str, status: str, credits_deducted: int):
@@ -74,8 +72,8 @@ def log_search(telegram_id: int, vehicle_number: str, status: str, credits_deduc
             "user_id": telegram_id, "vehicle_number": vehicle_number, 
             "status": status, "credits_deducted": credits_deducted
         }).execute()
-    except Exception as e:
-        print(f"❌ DB Error log_search: {e}")
+    except:
+        pass
 
 def create_payment_order(user_id: int, plan: str, amount: int, credits: int):
     try:
@@ -116,7 +114,7 @@ def approve_payment(order_id: str, admin_id: int):
         supabase.table("users").update({"wallet_balance": new_bal}).eq("telegram_id", user_id).execute()
         supabase.table("wallet_transactions").insert({
             "user_id": user_id, "type": "credit", "amount": credits,
-            "previous_balance": current_bal, "new_balance": new_bal, "reason": f"Payment Approved by Admin {admin_id}"
+            "previous_balance": current_bal, "new_balance": new_bal, "reason": f"Payment Approved"
         }).execute()
         supabase.table("payment_orders").update({"status": "approved"}).eq("id", order_id).execute()
         return True, new_bal
