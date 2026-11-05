@@ -111,3 +111,24 @@ def get_user_info(target_id: int):
         return res.data[0] if res.data else None
     except Exception as e:
         return None
+        # (पुराने कोड के नीचे ये नए फंक्शन्स जोड़ें)
+
+def get_active_subscription(user_id: int):
+    try:
+        supabase = get_supabase()
+        # चेक करें कि क्या एक्टिव सब्सक्रिप्शन है और उसकी एक्सपायरी डेट फ्यूचर में है
+        res = supabase.table("subscriptions").select("*").eq("user_id", user_id).eq("status", "active").gte("expiry_date", datetime.now(timezone.utc).isoformat()).execute()
+        return res.data[0] if res.data else None
+    except Exception as e:
+        print(f"DB Error get_sub: {e}")
+        return None
+
+def create_payment_order(user_id: int, plan: str, amount: int, credits: int):
+    try:
+        supabase = get_supabase()
+        res = supabase.table("payment_orders").insert({
+            "user_id": user_id, "plan_name": plan, "amount": amount, "credits": credits, "status": "pending"
+        }).execute()
+        return res.data[0]["id"] if res.data else None
+    except Exception as e:
+        return None
