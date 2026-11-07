@@ -42,10 +42,19 @@ def format_vehicle_dossier(data, reg_no):
     
     if valid(v.get("registration_date")): lines.append(f"├ 📅 Reg Date: {v.get('registration_date')}")
     if valid(v.get("rto")): lines.append(f"├ 🏛️ RTO: {v.get('rto')}")
-    if valid(v.get("engine")): lines.append(f"├ ⚙️ Engine: <code>{v.get('engine')}</code>")
-    if valid(v.get("chassis")): lines.append(f"├ 🔧 Chassis: <code>{v.get('chassis')}</code>")
     
-    # ट्री (Tree) फॉर्मेटिंग को सही करें (आखिरी वाले को └ बनाएं)
+    # इंजन और चेसिस नंबर को मास्क (Hide) करें (सिर्फ पहले 4 अक्षर और आखिरी 4 अक्षर दिखाएं)
+    if valid(v.get("engine")):
+        eng = str(v.get('engine'))
+        masked_eng = eng[:4] + "****" + eng[-4:] if len(eng) > 8 else eng
+        lines.append(f"├ ⚙️ Engine: <code>{masked_eng}</code>")
+        
+    if valid(v.get("chassis")):
+        chs = str(v.get('chassis'))
+        masked_chs = chs[:4] + "****" + chs[-4:] if len(chs) > 8 else chs
+        lines.append(f"├ 🔧 Chassis: <code>{masked_chs}</code>")
+    
+    # ट्री (Tree) फॉर्मेटिंग को सही करें
     if lines:
         for i in range(len(lines) - 1):
             lines[i] = lines[i].replace("└", "├")
@@ -56,8 +65,11 @@ def format_vehicle_dossier(data, reg_no):
     if valid(v.get("address")):
         text += f"\n📍 <b>Address:</b> {v.get('address')}\n"
         
-    # 📞 Mobile
+    # 📞 Mobile (अगर नहीं है तो दोबारा सर्च करने का मैसेज)
     if valid(data.get("mobile")):
         text += f"📞 <b>Mobile:</b> <code>{data.get('mobile')}</code>\n"
+    else:
+        text += f"\n⚠️ <b>Mobile Number Not Found!</b>\n"
+        text += f"🔄 <i>Kripya ishi gaadi number (<code>{reg_no}</code>) ko dobara search karein.</i>\n"
 
     return text
