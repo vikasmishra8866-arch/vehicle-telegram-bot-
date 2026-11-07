@@ -6,67 +6,53 @@ def format_vehicle_dossier(data, reg_no):
         s = str(val).strip().lower()
         if s in ["", "null", "na", "none", "0", "0.0", "undefined"]: return False
         return True
-
-    text = "⚡ <b>VEHICLE DOSSIER // QUICK INFO</b>\n\n"
-    
-    # 🔹 Reg. No
-    if valid(reg_no):
-        text += f"🔹 <b>Reg. No:</b> <b>{reg_no}</b>\n"
         
-    # 🔹 Vehicle (Make & Category)
-    make = v.get("make")
-    v_cat = v.get("vehicle_category") or v.get("vehicle_class")
-    if valid(make):
-        v_info = f"{make}"
-        if valid(v_cat): v_info += f" ({v_cat})"
-        text += f"🔹 <b>Vehicle:</b> {v_info}\n"
+    def get_val(key, default="None"):
+        val = v.get(key)
+        return val if valid(val) else default
 
-    # 🔹 Owner
-    if valid(v.get("owner")):
-        text += f"🔹 <b>Owner:</b> {v.get('owner')}\n"
-
-    # 🔹 Fuel & Color
-    fuel = v.get("fuel")
-    color = v.get("color")
-    fuel_color = ""
-    if valid(fuel): fuel_color += f"{fuel} ⛽"
-    if valid(color): 
-        if fuel_color: fuel_color += " | "
-        fuel_color += f"Color: {color} 🔴"
-    if fuel_color:
-        text += f"🔹 <b>Fuel:</b> {fuel_color}\n"
-
-    # 📋 REGISTRATION & SPECS
-    text += "\n📋 <b>REGISTRATION &amp; SPECS</b>\n"
-    lines = []
+    # हेडर
+    text = "👑 <b>VIP VEHICLE VERIFICATION</b>\n"
+    text += "━━━━━━━━━━━━━━━━━━━━━━\n"
     
-    if valid(v.get("registration_date")): lines.append(f"├ 📅 Reg Date: {v.get('registration_date')}")
-    if valid(v.get("rto")): lines.append(f"├ 🏛️ RTO: {v.get('rto')}")
-    
-    # ⚙️ Engine (अब पूरा नंबर दिखेगा, कोई मास्किंग नहीं)
-    if valid(v.get("engine")): 
-        lines.append(f"├ ⚙️ Engine: <code>{v.get('engine')}</code>")
-        
-    # 🔧 Chassis (अब पूरा नंबर दिखेगा, कोई मास्किंग नहीं)
-    if valid(v.get("chassis")): 
-        lines.append(f"├ 🔧 Chassis: <code>{v.get('chassis')}</code>")
-    
-    # ट्री (Tree) फॉर्मेटिंग को सही करें (आखिरी वाले को └ बनाएं)
-    if lines:
-        for i in range(len(lines) - 1):
-            lines[i] = lines[i].replace("└", "├")
-        lines[-1] = lines[-1].replace("├", "└")
-        text += "\n".join(lines) + "\n"
+    # मुख्य जानकारी
+    text += f"🚗 <b>Maker:</b> {get_val('make')}\n"
+    variant = v.get('variant') or v.get('model')
+    text += f"🚚 <b>Variant:</b> {variant if valid(variant) else 'None'}\n"
+    text += f"🔢 <b>Number:</b> <b>{reg_no}</b>\n\n"
 
-    # 📍 Address
-    if valid(v.get("address")):
-        text += f"\n📍 <b>Address:</b> {v.get('address')}\n"
-        
-    # 📞 Mobile (अगर नहीं है तो दोबारा सर्च करने का मैसेज)
-    if valid(data.get("mobile")):
-        text += f"📞 <b>Mobile:</b> <code>{data.get('mobile')}</code>\n"
+    # ओनर जानकारी
+    text += "👤 <b>Registered Owner</b>\n"
+    owner = get_val('owner')
+    city = v.get('city') or v.get('rto')
+    city_text = f" ({city})" if valid(city) else ""
+    text += f"└ <b>{owner}</b>{city_text}\n\n"
+
+    # व्हीकल प्रोफाइल
+    text += "📊 <b>Vehicle Profile</b>\n"
+    
+    v_class = v.get('vehicle_class') or v.get('body_type')
+    if valid(v_class): text += f"├ <b>Class:</b> {v_class}\n"
+    if valid(v.get('fuel')): text += f"├ <b>Fuel:</b> {v.get('fuel')}\n"
+    if valid(v.get('registration_date')): text += f"├ <b>Reg Date:</b> {v.get('registration_date')}\n"
+    
+    financier = get_val('financier', "None")
+    text += f"└ <b>Financier:</b> {financier}\n\n"
+
+    # आइडेंटिफिकेशन नंबर
+    text += "🛠️ <b>Identification Numbers</b>\n"
+    if valid(v.get('engine')): text += f"├ <b>Engine:</b> <code>{v.get('engine')}</code>\n"
+    if valid(v.get('chassis')): text += f"└ <b>Chassis:</b> <code>{v.get('chassis')}</code>\n\n"
+
+    # कांटेक्ट और एड्रेस
+    mobile = data.get("mobile")
+    if valid(mobile):
+        text += f"📞 <b>Owner Contact:</b> <code>{mobile}</code> ✅\n"
     else:
-        text += f"\n⚠️ <b>Mobile Number Not Found!</b>\n"
+        text += f"📞 <b>Owner Contact:</b> ❌ <i>Not Found</i>\n"
         text += f"🔄 <i>Kripya ishi gaadi number (<code>{reg_no}</code>) ko dobara search karein.</i>\n"
+
+    if valid(v.get('address')):
+        text += f"🏠 <b>Permit/Address:</b> {v.get('address')}\n"
 
     return text
