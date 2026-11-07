@@ -1,41 +1,63 @@
-import qrcode
-from io import BytesIO
-from aiogram.types import BufferedInputFile
-from .config import UPI_ID
-
-def generate_upi_qr(amount: int, credits: int):
-    upi_uri = f"upi://pay?pa={UPI_ID}&am={amount}&pn=VehicleDesk&tn=Topup_{credits}_Credits"
-    qr = qrcode.QRCode(version=1, box_size=10, border=5)
-    qr.add_data(upi_uri)
-    qr.make(fit=True)
-    img = qr.make_image(fill_color="black", back_color="white")
+def format_vehicle_dossier(data, reg_no):
+    v = data.get("vehicle", {})
     
-    bio = BytesIO()
-    img.save(bio, format="PNG")
-    bio.seek(0)
-    return BufferedInputFile(bio.read(), filename="qr.png")
+    def valid(val):
+        if val is None: return False
+        s = str(val).strip().lower()
+        if s in ["", "null", "na", "none", "0", "0.0", "undefined"]: return False
+        return True
 
-def format_vehicle_tree(reg_no, v, data):
-    def valid(val): return val and str(val).strip().lower() not in ["", "null", "na", "none", "0"]
-    text = f"🧭 <b>VEHICLE JOURNEY</b> — {reg_no}\n────────────────────────────────────────────\n│\n"
-    text += "├─ 🚘 <b>VEHICLE IDENTITY</b>\n"
-    if valid(v.get("make")): text += f"│   ├─ Make      : {v.get('make')}\n"
-    if valid(v.get("variant")): text += f"│   ├─ Variant   : {v.get('variant')}\n"
-    if valid(v.get("fuel")): text += f"│   ├─ Fuel      : {v.get('fuel')}\n"
-    if valid(v.get("color")): text += f"│   ├─ Color     : {v.get('color')}\n"
-    if valid(v.get("body_type")): text += f"│   ├─ Body Type : {v.get('body_type')}\n"
-    if valid(v.get("vehicle_class")): text += f"│   └─ Class     : {v.get('vehicle_class')}\n│\n"
-    text += "├─ 👤 <b>OWNER DETAILS</b>\n"
-    if valid(v.get("owner")): text += f"│   ├─ Owner     : {v.get('owner')}\n"
-    if valid(data.get("mobile")): text += f"│   ├─ Mobile    : {data.get('mobile')}\n"
-    text += f"│   └─ Found     : {'Yes' if data.get('mobile_found') else 'No'}\n│\n"
-    text += "├─ 🔑 <b>MACHINE DETAILS</b>\n"
-    if valid(v.get("chassis")): text += f"│   ├─ Chassis   : {v.get('chassis')}\n"
-    if valid(v.get("engine")): text += f"│   └─ Engine    : {v.get('engine')}\n│\n"
-    text += "├─ 📅 <b>REGISTRATION</b>\n"
-    if valid(v.get("registration_date")): text += f"│   ├─ Date      : {v.get('registration_date')}\n"
-    text += f"│   ├─ Reg No    : {reg_no}\n"
-    if valid(v.get("rto")): text += f"│   └─ RTO       : {v.get('rto')}\n│\n"
-    if valid(v.get("insurance_company")): text += f"├─ 🛡️ <b>INSURANCE</b>\n│   └─ Company   : {v.get('insurance_company')}\n│\n"
-    text += "────────────────────────────────────────────\n⚠️🚨 <b>IMPORTANT NOTE</b> 🚨⚠️\n🔍 Ye details sirf AUDIT purpose ke liye hain.\n"
+    text = "⚡ <b>VEHICLE DOSSIER // QUICK INFO</b>\n\n"
+    
+    # 🔹 Reg. No
+    if valid(reg_no):
+        text += f"🔹 <b>Reg. No:</b> <b>{reg_no}</b>\n"
+        
+    # 🔹 Vehicle (Make & Category)
+    make = v.get("make")
+    v_cat = v.get("vehicle_category") or v.get("vehicle_class")
+    if valid(make):
+        v_info = f"{make}"
+        if valid(v_cat): v_info += f" ({v_cat})"
+        text += f"🔹 <b>Vehicle:</b> {v_info}\n"
+
+    # 🔹 Owner
+    if valid(v.get("owner")):
+        text += f"🔹 <b>Owner:</b> {v.get('owner')}\n"
+
+    # 🔹 Fuel & Color
+    fuel = v.get("fuel")
+    color = v.get("color")
+    fuel_color = ""
+    if valid(fuel): fuel_color += f"{fuel} ⛽"
+    if valid(color): 
+        if fuel_color: fuel_color += " | "
+        fuel_color += f"Color: {color} 🔴"
+    if fuel_color:
+        text += f"🔹 <b>Fuel:</b> {fuel_color}\n"
+
+    # 📋 REGISTRATION & SPECS
+    text += "\n📋 <b>REGISTRATION &amp; SPECS</b>\n"
+    lines = []
+    
+    if valid(v.get("registration_date")): lines.append(f"├ 📅 Reg Date: {v.get('registration_date')}")
+    if valid(v.get("rto")): lines.append(f"├ 🏛️ RTO: {v.get('rto')}")
+    if valid(v.get("engine")): lines.append(f"├ ⚙️ Engine: <code>{v.get('engine')}</code>")
+    if valid(v.get("chassis")): lines.append(f"├ 🔧 Chassis: <code>{v.get('chassis')}</code>")
+    
+    # ट्री (Tree) फॉर्मेटिंग को सही करें (आखिरी वाले को └ बनाएं)
+    if lines:
+        for i in range(len(lines) - 1):
+            lines[i] = lines[i].replace("└", "├")
+        lines[-1] = lines[-1].replace("├", "└")
+        text += "\n".join(lines) + "\n"
+
+    # 📍 Address
+    if valid(v.get("address")):
+        text += f"\n📍 <b>Address:</b> {v.get('address')}\n"
+        
+    # 📞 Mobile
+    if valid(data.get("mobile")):
+        text += f"📞 <b>Mobile:</b> <code>{data.get('mobile')}</code>\n"
+
     return text
